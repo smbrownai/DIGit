@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIG Framework Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            color: #1565c0;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .info-box p {
+            color: #0d47a1;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-box ul {
+            margin-top: 10px;
+            margin-left: 20px;
+            color: #0d47a1;
+            font-size: 14px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="password"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus,
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .file-upload {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f5f5ff;
+        }
+
+        .file-upload.drag-over {
+            border-color: #667eea;
+            background: #e8eaf6;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            cursor: pointer;
+        }
+
+        .file-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8eaf6;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-info p {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 24px;
+        }
+
+        .dig-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .dig-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dig-section.data {
+            border-left-color: #4CAF50;
+        }
+
+        .dig-section.data h3 {
+            color: #4CAF50;
+        }
+
+        .dig-section.information {
+            border-left-color: #FF9800;
+        }
+
+        .dig-section.information h3 {
+            color: #FF9800;
+        }
+
+        .dig-section.guidance {
+            border-left-color: #2196F3;
+        }
+
+        .dig-section.guidance h3 {
+            color: #2196F3;
+        }
+
+        .dig-content {
+            color: #333;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .dig-content p {
+            margin-bottom: 12px;
+        }
+
+        .dig-content ul, .dig-content ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .dig-content li {
+            margin-bottom: 8px;
+        }
+
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .error p {
+            color: #c62828;
+            font-weight: 500;
+        }
+
+        .token-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .small-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 DIG Framework Analyzer</h1>
+            <p>Upload a file and let Claude analyze it using the Data-Information-Guidance framework</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h3>What is the DIG Framework?</h3>
+                <p>The DIG framework is a structured approach to analysis that breaks down content into three levels:</p>
+                <ul>
+                    <li><strong>Data:</strong> Raw facts, figures, and observations from the content</li>
+                    <li><strong>Information:</strong> Patterns, insights, and meaning derived from the data</li>
+                    <li><strong>Guidance:</strong> Actionable recommendations and next steps based on the information</li>
+                </ul>
+            </div>
+
+            <div class="form-section">
+                <label for="apiKey">Anthropic API Key</label>
+                <input type="password" id="apiKey" placeholder="sk-ant-..." required>
+                <p class="small-text">Your API key is stored locally and never sent anywhere except directly to Anthropic's API. Get one at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
+            </div>
+
+            <div class="form-section">
+                <label>Upload File (PDF, Image, or Text Document)</label>
+                <div class="file-upload" id="fileUpload">
+                    <label for="fileInput" class="file-upload-label">
+                        <div class="file-icon">📄</div>
+                        <p><strong>Click to upload</strong> or drag and drop</p>
+                        <p class="small-text">Supports: PDF, PNG, JPG, JPEG, WEBP, GIF</p>
+                    </label>
+                    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif">
+                </div>
+                <div class="file-info" id="fileInfo">
+                    <p id="fileName"></p>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <label for="analysisGoal">What do you want to analyze? (Optional)</label>
+                <textarea id="analysisGoal" placeholder="E.g., 'Analyze this business report for key insights' or 'What are the main takeaways from this document?' Leave blank for general analysis."></textarea>
+            </div>
+
+            <button class="analyze-btn" id="analyzeBtn">Analyze with DIG Framework</button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Claude is analyzing your file...</p>
+            </div>
+
+            <div class="error" id="error">
+                <p id="errorMessage"></p>
+            </div>
+
+            <div class="results" id="results">
+                <h2>DIG Analysis Results</h2>
+                
+                <div class="dig-section data">
+                    <h3><span>📊</span> Data</h3>
+                    <div class="dig-content" id="dataContent"></div>
+                </div>
+
+                <div class="dig-section information">
+                    <h3><span>💡</span> Information</h3>
+                    <div class="dig-content" id="informationContent"></div>
+                </div>
+
+                <div class="dig-section guidance">
+                    <h3><span>🎯</span> Guidance</h3>
+                    <div class="dig-content" id="guidanceContent"></div>
+                </div>
+
+                <div class="token-info" id="tokenInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFile = null;
+        let fileBase64 = null;
+        let fileType = null;
+
+        const fileUpload = document.getElementById('fileUpload');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+
+        // File upload handlers
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('drag-over');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('drag-over');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                uploadedFile = file;
+                fileName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                fileInfo.classList.add('show');
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fileBase64 = e.target.result.split(',')[1];
+                    
+                    // Determine file type
+                    if (file.type === 'application/pdf') {
+                        fileType = 'application/pdf';
+                    } else if (file.type.startsWith('image/')) {
+                        fileType = file.type;
+                    } else {
+                        showError('Unsupported file type. Please upload a PDF or image file.');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const analysisGoal = document.getElementById('analysisGoal').value.trim();
+
+            // Validation
+            if (!apiKey) {
+                showError('Please enter your Anthropic API key.');
+                return;
+            }
+
+            if (!uploadedFile || !fileBase64) {
+                showError('Please upload a file first.');
+                return;
+            }
+
+            // Hide previous results/errors
+            hideError();
+            results.classList.remove('show');
+            loading.classList.add('show');
+            analyzeBtn.disabled = true;
+
+            try {
+                const analysis = await analyzeWithDIG(apiKey, fileBase64, fileType, analysisGoal);
+                displayResults(analysis);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.classList.remove('show');
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        async function analyzeWithDIG(apiKey, base64Data, mediaType, userGoal) {
+            const systemPrompt = `You are an expert analyst using the DIG (Data-Information-Guidance) framework. Your task is to analyze the provided content and structure your response in three clear sections:
+
+1. DATA: Extract and list the raw facts, figures, key points, and observations present in the content. Be thorough and objective.
+
+2. INFORMATION: Identify patterns, trends, insights, and meaning from the data. What does the data tell us? What's significant or noteworthy?
+
+3. GUIDANCE: Provide actionable recommendations, next steps, or strategic direction based on the information. What should be done with these insights?
+
+Structure your entire response using these exact headers:
+## DATA
+[your data analysis]
+
+## INFORMATION
+[your information analysis]
+
+## GUIDANCE
+[your guidance]
+
+Be comprehensive but concise. Use bullet points where appropriate.`;
+
+            let userPrompt = 'Please analyze this document using the DIG framework.';
+            if (userGoal) {
+                userPrompt = `Please analyze this document using the DIG framework, with a focus on: ${userGoal}`;
+            }
+
+            const content = [];
+            
+            // Add file to content
+            if (mediaType === 'application/pdf') {
+                content.push({
+                    type: "document",
+                    source: {
+                        type: "base64",
+                        media_type: mediaType,
+                        data: base64Data
+                    }
+                });
+            } else {
+                content.push({
+                    type: "image",
+                    source: {
+                        type: "base64",
+                        media_type: mediaType,
+                        data: base64Data
+                    }
+                });
+            }
+
+            // Add text prompt
+            content.push({
+                type: "text",
+                text: userPrompt
+            });
+
+            const response = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": apiKey,
+                    "anthropic-version": "2023-06-01"
+                },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 4000,
+                    system: systemPrompt,
+                    messages: [
+                        {
+                            role: "user",
+                            content: content
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'API request failed');
+            }
+
+            const data = await response.json();
+            
+            // Extract text from response
+            const text = data.content
+                .filter(item => item.type === 'text')
+                .map(item => item.text)
+                .join('\n');
+
+            return {
+                text: text,
+                usage: data.usage
+            };
+        }
+
+        function displayResults(analysis) {
+            // Parse the response into DIG sections
+            const sections = parseDIGSections(analysis.text);
+            
+            document.getElementById('dataContent').innerHTML = formatContent(sections.data);
+            document.getElementById('informationContent').innerHTML = formatContent(sections.information);
+            document.getElementById('guidanceContent').innerHTML = formatContent(sections.guidance);
+            
+            // Display token usage
+            if (analysis.usage) {
+                document.getElementById('tokenInfo').textContent = 
+                    `Tokens used: ${analysis.usage.input_tokens} input + ${analysis.usage.output_tokens} output = ${analysis.usage.input_tokens + analysis.usage.output_tokens} total`;
+            }
+
+            results.classList.add('show');
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function parseDIGSections(text) {
+            const sections = {
+                data: '',
+                information: '',
+                guidance: ''
+            };
+
+            // Split by section headers
+            const dataMatch = text.match(/##\s*DATA\s*([\s\S]*?)(?=##\s*INFORMATION|$)/i);
+            const infoMatch = text.match(/##\s*INFORMATION\s*([\s\S]*?)(?=##\s*GUIDANCE|$)/i);
+            const guidanceMatch = text.match(/##\s*GUIDANCE\s*([\s\S]*?)$/i);
+
+            sections.data = dataMatch ? dataMatch[1].trim() : 'No data section found.';
+            sections.information = infoMatch ? infoMatch[1].trim() : 'No information section found.';
+            sections.guidance = guidanceMatch ? guidanceMatch[1].trim() : 'No guidance section found.';
+
+            return sections;
+        }
+
+        function formatContent(content) {
+            // Convert markdown-style formatting to HTML
+            let formatted = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n- /g, '<li>')
+                .replace(/\n\d+\. /g, '<li>');
+
+            // Wrap in paragraph tags
+            if (!formatted.includes('<li>')) {
+                formatted = '<p>' + formatted + '</p>';
+            } else {
+                // Handle lists
+                const parts = formatted.split(/<li>/);
+                formatted = '<p>' + parts[0] + '</p>';
+                if (parts.length > 1) {
+                    formatted += '<ul><li>' + parts.slice(1).join('</li><li>') + '</li></ul>';
+                }
+            }
+
+            return formatted;
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            error.classList.add('show');
+            error.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideError() {
+            error.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
