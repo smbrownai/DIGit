@@ -4,9 +4,7 @@ An AI-powered document analysis tool that uses Claude to break down content into
 
 ## 🔗 Live Demo
 
-[View Live Tool](https://yourusername.github.io/dig-framework-analyzer/)
-
-*(Replace `yourusername` with your actual GitHub username)*
+[View Live Tool](https://smbrownai.github.io/dig-framework-analyzer/)
 
 ## 📋 What is the DIG Framework?
 
