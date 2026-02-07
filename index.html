@@ -362,14 +362,14 @@
             </div>
 
             <div class="form-section">
-                <label>Upload File (PDF, Image, or Text Document)</label>
+                <label>Upload File (PDF, Image, CSV, or XLSX)</label>
                 <div class="file-upload" id="fileUpload">
                     <label for="fileInput" class="file-upload-label">
                         <div class="file-icon">📄</div>
                         <p><strong>Click to upload</strong> or drag and drop</p>
-                        <p class="small-text">Supports: PDF, PNG, JPG, JPEG, WEBP, GIF</p>
+                        <p class="small-text">Supports: PDF, PNG, JPG, JPEG, WEBP, GIF, XLSX, CSV</p>
                     </label>
-                    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif">
+                    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.xlsx,.csv">
                 </div>
                 <div class="file-info" id="fileInfo">
                     <p id="fileName"></p>
@@ -458,19 +458,42 @@
                 fileInfo.classList.add('show');
                 
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    fileBase64 = e.target.result.split(',')[1];
-                    
-                    // Determine file type
-                    if (file.type === 'application/pdf') {
-                        fileType = 'application/pdf';
-                    } else if (file.type.startsWith('image/')) {
-                        fileType = file.type;
-                    } else {
-                        showError('Unsupported file type. Please upload a PDF or image file.');
-                    }
-                };
-                reader.readAsDataURL(file);
+                
+                // Handle CSV files
+                if (file.name.toLowerCase().endsWith('.csv')) {
+                    reader.onload = function(e) {
+                        const csvText = e.target.result;
+                        // Convert CSV text to base64 for consistent handling
+                        fileBase64 = btoa(unescape(encodeURIComponent(csvText)));
+                        fileType = 'text/csv';
+                    };
+                    reader.readAsText(file);
+                }
+                // Handle XLSX files
+                else if (file.name.toLowerCase().endsWith('.xlsx') || 
+                         file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                    reader.onload = function(e) {
+                        fileBase64 = e.target.result.split(',')[1];
+                        fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    };
+                    reader.readAsDataURL(file);
+                }
+                // Handle PDF and image files
+                else {
+                    reader.onload = function(e) {
+                        fileBase64 = e.target.result.split(',')[1];
+                        
+                        // Determine file type
+                        if (file.type === 'application/pdf') {
+                            fileType = 'application/pdf';
+                        } else if (file.type.startsWith('image/')) {
+                            fileType = file.type;
+                        } else {
+                            showError('Unsupported file type. Please upload a PDF, image, CSV, or XLSX file.');
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
         }
 
@@ -535,7 +558,8 @@ Be comprehensive but concise. Use bullet points where appropriate.`;
             const content = [];
             
             // Add file to content
-            if (mediaType === 'application/pdf') {
+            if (mediaType === 'application/pdf' || 
+                mediaType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
                 content.push({
                     type: "document",
                     source: {
@@ -544,6 +568,15 @@ Be comprehensive but concise. Use bullet points where appropriate.`;
                         data: base64Data
                     }
                 });
+            } else if (mediaType === 'text/csv') {
+                // For CSV, send as text in the prompt instead of as a document
+                const csvText = decodeURIComponent(escape(atob(base64Data)));
+                content.push({
+                    type: "text",
+                    text: `Here is the CSV data to analyze:\n\n${csvText}\n\n${userPrompt}`
+                });
+                // Clear userPrompt since we've included it above
+                userPrompt = null;
             } else {
                 content.push({
                     type: "image",
@@ -555,11 +588,13 @@ Be comprehensive but concise. Use bullet points where appropriate.`;
                 });
             }
 
-            // Add text prompt
-            content.push({
-                type: "text",
-                text: userPrompt
-            });
+            // Add text prompt (if not already included for CSV)
+            if (userPrompt) {
+                content.push({
+                    type: "text",
+                    text: userPrompt
+                });
+            }
 
             const response = await fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
